@@ -24,7 +24,7 @@ string duplicate_encoder1(const string& word) {
   return ret;
 }
 
-// Solution O(n log n)
+// Solution O(2n)
 string duplicate_encoder2(const string& word) {
   string ret = "";
   
