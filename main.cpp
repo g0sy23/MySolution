@@ -19,10 +19,10 @@ string duplicate_encoder1(const wstring& word) {
     [loc](wchar_t c) { return tolower(c, loc); });
 
   for (const auto& i : lowerCaseWord) {
-    if (lowerCaseWord.find_last_of(i) != lowerCaseWord.find(i)) {
-      ret += ')';
-    } else {
+    if (lowerCaseWord.find_last_of(i) == lowerCaseWord.find(i)) {
       ret += '(';
+    } else {
+      ret += ')';
     }
   }
   
