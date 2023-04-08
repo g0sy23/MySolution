@@ -1,20 +1,25 @@
 #include <algorithm>
 #include <chrono>
+#include <codecvt>
 #include <iostream>
+#include <locale>
 #include <map>
 #include <string>
+#include <unordered_map>
 
 using namespace std;
 
 // Solution O(n^2)
-string duplicate_encoder1(const string& word) {
+string duplicate_encoder1(const wstring& word) {
   string ret = "";
 
-  string lowerCaseWord = word;
-  transform(lowerCaseWord.begin(), lowerCaseWord.end(), lowerCaseWord.begin(), ::tolower);
+  locale loc("");
+  wstring lowerCaseWord = word;
+  transform(lowerCaseWord.begin(), lowerCaseWord.end(), lowerCaseWord.begin(),
+    [loc](wchar_t c) { return tolower(c, loc); });
 
-  for (int i = 0; i < lowerCaseWord.length(); i++) {
-    if (lowerCaseWord.find_last_of(lowerCaseWord[i]) != lowerCaseWord.find(lowerCaseWord[i])) {
+  for (const auto& i : lowerCaseWord) {
+    if (lowerCaseWord.find_last_of(i) != lowerCaseWord.find(i)) {
       ret += ')';
     } else {
       ret += '(';
@@ -24,7 +29,7 @@ string duplicate_encoder1(const string& word) {
   return ret;
 }
 
-// Solution O(2n)
+// Solution O(2n) only for ASCII
 string duplicate_encoder2(const string& word) {
   string ret = "";
   
@@ -47,17 +52,64 @@ string duplicate_encoder2(const string& word) {
   return ret;
 }
 
+// Solution O(n log n)
+string duplicate_encoder3(const wstring& word) {
+  string ret = "";
+  
+  locale loc("");
+  map<wchar_t, unsigned> m;
+
+  for (const auto& c : word) {
+    ++m[tolower(c, loc)];
+  }
+  
+  for (const auto& c : word) {
+    int t = m[tolower(c, loc)];
+    if (t == 1) {
+      ret += '(';
+    } else if (t > 1) {
+      ret += ')';
+    }
+  }
+  
+  return ret;
+}
+
+// Solution O(2n)
+string duplicate_encoder4(const wstring& word) {
+  string ret = "";
+  
+  locale loc("");
+  unordered_map<wchar_t, unsigned> m;
+  
+  for (const auto& c : word) {
+    ++m[tolower(c, loc)];
+  }
+  
+  for (const auto& c : word) {
+    int t = m[tolower(c, loc)];
+    if (t == 1) {
+      ret += '(';
+    } else if (t > 1) {
+      ret += ')';
+    }
+  }
+  
+  return ret;
+}
+
 int main()
 {
     // Test Cases
-    map<string, string> m = {
-        { "din", "(((" },
-        { "recede", "()()()" },
-        { "Success", ")())())" },
-        { "(( @", "))((" },
-        { "CodeWarrior", "()(((())())" },
-        { "Supralapsarian", ")()))()))))()(" },
-        { " ( ( )", ")))))(" }
+    map<wstring, string> m = {
+        { L"din", "(((" },
+        { L"recede", "()()()" },
+        { L"Success", ")())())" },
+        { L"(( @", "))((" },
+        { L"CodeWarrior", "()(((())())" },
+        { L"Supralapsarian", ")()))()))))()(" },
+        { L" ( ( )", ")))))(" },
+        { L"Тест", ")(()"}
     };
     
     for (const auto& [i, j] : m) {
@@ -65,15 +117,26 @@ int main()
         chrono::steady_clock::time_point begin;
         chrono::steady_clock::time_point end;
         
-        begin = std::chrono::steady_clock::now();
+        begin = chrono::steady_clock::now();
         res = duplicate_encoder1(i) == j ? "passed" : "failed";
-        end = std::chrono::steady_clock::now();
+        end = chrono::steady_clock::now();
         cout << "Solution 1 " << res << " in " << (end - begin).count() << " ns" << endl;
         
-        begin = std::chrono::steady_clock::now();
-        res = duplicate_encoder2(i) == j ? "passed" : "failed";
-        end = std::chrono::steady_clock::now();
+        begin = chrono::steady_clock::now();
+        wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+        res = duplicate_encoder2(converter.to_bytes(i)) == j ? "passed" : "failed";
+        end = chrono::steady_clock::now();
         cout << "Solution 2 " << res << " in " << (end - begin).count() << " ns" << endl;
+        
+        begin = chrono::steady_clock::now();
+        res = duplicate_encoder3(i) == j ? "passed" : "failed";
+        end = chrono::steady_clock::now();
+        cout << "Solution 3 " << res << " in " << (end - begin).count() << " ns" << endl;
+        
+        begin = chrono::steady_clock::now();
+        res = duplicate_encoder4(i) == j ? "passed" : "failed";
+        end = chrono::steady_clock::now();
+        cout << "Solution 4 " << res << " in " << (end - begin).count() << " ns" << endl;
     }
 
     return 0;
